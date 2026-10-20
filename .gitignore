@@ -1,0 +1,15 @@
+# APT generated metadata (dibuat workflow, jangan commit)
+dists/
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Build artifacts
+*.deb
+!pool/**/*.deb
+
+# Logs
+*.log
