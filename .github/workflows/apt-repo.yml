@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'pool/**/*.deb'
+      - 'pool/**'
       - 'apt-key.asc'
       - '.github/workflows/apt-repo.yml'
   workflow_dispatch:
@@ -38,7 +38,14 @@ jobs:
       - name: Generate Packages
         run: |
           mkdir -p dists/stable/main/binary-amd64
-          dpkg-scanpackages pool/ /dev/null > dists/stable/main/binary-amd64/Packages
+          mkdir -p pool/main/t/tscode   # pastikan folder pool selalu ada
+          # Hanya scan kalau ada .deb
+          if [ -n "$(find pool -name '*.deb' -print -quit)" ]; then
+            dpkg-scanpackages pool/ /dev/null > dists/stable/main/binary-amd64/Packages
+          else
+            echo "No .deb files found. Creating empty Packages file."
+            touch dists/stable/main/binary-amd64/Packages
+          fi
           gzip -kf dists/stable/main/binary-amd64/Packages
 
       - name: Generate Release
