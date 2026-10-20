@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'pool/**'
+      - 'pool/**/*.deb'
       - 'apt-key.asc'
       - '.github/workflows/apt-repo.yml'
   workflow_dispatch:
@@ -35,18 +35,25 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           fingerprint: ${{ secrets.GPG_KEY_ID }}
 
-      - name: Generate Packages
+      - name: Generate Packages for amd64
         run: |
           mkdir -p dists/stable/main/binary-amd64
-          mkdir -p pool/main/t/tscode   # pastikan folder pool selalu ada
-          # Hanya scan kalau ada .deb
-          if [ -n "$(find pool -name '*.deb' -print -quit)" ]; then
-            dpkg-scanpackages pool/ /dev/null > dists/stable/main/binary-amd64/Packages
+          if [ -n "$(find pool -name '*_amd64.deb' -print -quit)" ]; then
+            dpkg-scanpackages -a amd64 pool/ /dev/null > dists/stable/main/binary-amd64/Packages
           else
-            echo "No .deb files found. Creating empty Packages file."
             touch dists/stable/main/binary-amd64/Packages
           fi
           gzip -kf dists/stable/main/binary-amd64/Packages
+
+      - name: Generate Packages for arm64
+        run: |
+          mkdir -p dists/stable/main/binary-arm64
+          if [ -n "$(find pool -name '*_arm64.deb' -print -quit)" ]; then
+            dpkg-scanpackages -a arm64 pool/ /dev/null > dists/stable/main/binary-arm64/Packages
+          else
+            touch dists/stable/main/binary-arm64/Packages
+          fi
+          gzip -kf dists/stable/main/binary-arm64/Packages
 
       - name: Generate Release
         run: |
@@ -55,7 +62,7 @@ jobs:
             -o APT::FTPArchive::Release::Label="Tscode" \
             -o APT::FTPArchive::Release::Suite="stable" \
             -o APT::FTPArchive::Release::Codename="stable" \
-            -o APT::FTPArchive::Release::Architectures="amd64" \
+            -o APT::FTPArchive::Release::Architectures="amd64 arm64" \
             -o APT::FTPArchive::Release::Components="main" \
             release dists/stable > dists/stable/Release
 
