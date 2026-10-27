@@ -1,2 +1,2 @@
-# Tscode-repo
-APT repository for Tscode 
+# Kayls - repo
+APT repository for Kayls
